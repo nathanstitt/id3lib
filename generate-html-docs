@@ -1,0 +1,49 @@
+#!/usr/bin/ruby
+
+require 'id3lib.so'
+
+require 'rdoc/rdoc'
+
+id3=ID3lib.new( './test/test.mp3' )
+
+File.open( 'id3lib.rb','w' ) do | cls |
+    cls.puts 'class ID3lib'
+    id3.each_possible_tag do | tag, desc |
+        cls.puts "# #{desc}"
+        cls.puts "attr_accessor :#{tag}"
+    end
+    cls.puts "class Picture"
+    ID3lib::Picture.constants.each do | const |
+        cls.puts "#{const}=#{ID3lib::Picture.const_get(const)}"
+    end
+    cls.puts <<-EOF
+        # what is depicted.  See constants in class
+        attr_accessor :depicts
+        # The binary picture data
+        attr_accessor :data
+        # The picture's description
+        attr_accessor :description
+        # Remove the picture from the tag
+        def delete
+        end
+    end
+    # Arguably the most overlooked method in the library.  save must be called
+    # so that changes are written to the tag.
+    def save
+    end
+    # yield each picture which is contained inside an APIC frame ( what iTunes uses )
+    def each_picture
+    end
+    # Add a picture to the tag.  data must contain the picture data, type is one of the constants from ID3lib::Picture
+    def add_picture( data, type )
+    end
+    end
+    EOF
+end
+
+
+rdoc = RDoc::RDoc.new
+
+rdoc.document( [ 'README', 'id3lib.rb' ] )
+
+File.unlink( 'id3lib.rb' )

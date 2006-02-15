@@ -5,6 +5,12 @@
   (save-buffer 0)
   (compile "cd ~/code/ruby/id3lib && make && cd test && ruby test.rb"))
 
+
+(defun my-save-and-compile ()
+  (interactive "")
+  (save-buffer 0)
+  (compile "cd ~/code/ruby/id3lib && ./generate-html-docs"))
+
 ;; && ruby extconf.rb && make clean
 
 ;;; end of emacs.el

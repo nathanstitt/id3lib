@@ -1,0 +1,48 @@
+Author::    Nathan Stitt
+Copyright:: Copyright (c) 2006
+License::   Ruby's
+
+== id3lib README
+
+  id3lib is a library which wraps the C++ libid3
+  library and exposes it's methods to Ruby.
+
+  My aim in writing the library was to have it as
+  easy to use and natural as possible, without
+  having to deal with the cumbersome nature of the
+  actually id3 tags/frames/fields paradigm.
+
+  I feel I've succeeded for the most part, and believe 
+  the library to have the most complete implementation
+  of the id3 specification available to Ruby.
+
+  The latest version  of this library can be found
+  at http://www.stitt.org/code/
+
+
+== Usage
+
+  	require 'id3lib'
+
+  	tag=ID3lib.new( 'test.mp3' )
+	File.open( 'cover.jpg' ) do | file |
+		pic=tag.add_picture( file.read )
+                pic.depicts=ID3lib::Picture::FRONT_COVER
+                pic.description='A Test Picture of nothing'
+        end
+        tag.title='Test Song'
+        tag.save
+
+License
+
+  Same as Ruby (MIT)
+
+
+Bug Reports
+
+
+  Any kind of bug reports are welcome.
+  If you find bugs, please email me, or enter them
+  on my trac site at: http://www.stitt.org/code/
+
+

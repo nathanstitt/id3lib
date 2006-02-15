@@ -76,6 +76,7 @@ id3lib_init( VALUE self, VALUE file ) {
 }
 
 
+
 static VALUE
 id3lib_new( VALUE cls, VALUE file ){
   VALUE argv[1];
@@ -89,27 +90,14 @@ id3lib_new( VALUE cls, VALUE file ){
 
 
 VALUE
-id3lib_each_possible_tag( VALUE self ){
-  for ( frame_names_hash_t::const_iterator tag=frames_hash.begin();
-	tag != frames_hash.end(); ++tag ) {
-    rb_yield( rb_str_new2( tag->first.c_str() ) );
-  }
-  rb_yield( rb_str_new2( "comment" ) );
-  rb_yield( rb_str_new2( "play_counter" ) );
-  rb_yield( rb_str_new2( "popularity_meter" ) );
-  rb_yield( rb_str_new2( "url" ) );
-  return Qtrue;
-}
-
-
-VALUE
-id3lib_add_picture( VALUE self, VALUE data ){
+id3lib_add_picture( VALUE self, VALUE data, VALUE type ){
   ID3_Tag *tag;
   Data_Get_Struct( self, ID3_Tag, tag );
   long int len;
   char *dat=rb_str2cstr( data, &len );
   ID3_Frame *frame = new ID3_Frame( ID3FID_PICTURE );
   frame->GetField( ID3FN_DATA )->Set( (const uchar*)dat, len );
+  frame->GetField( ID3FN_PICTURETYPE )->Set( INT2FIX( type ) );
   tag->AttachFrame( frame );
   return Picture::Ruby( self, frame );
 }
@@ -127,6 +115,21 @@ id3lib_each_picture( VALUE self ){
     }
   }
   return Qtrue;
+}
+
+static VALUE
+id3lib_pictures( VALUE self ){
+  ID3_Tag *tag;
+  Data_Get_Struct( self, ID3_Tag, tag );
+  VALUE ret=rb_ary_new();
+  std::auto_ptr<ID3_Tag::Iterator> iter( tag->CreateIterator() );
+  ID3_Frame* frame = NULL;
+  while (NULL != ( frame = iter->GetNext())){
+    if ( frame->GetID() == ID3FID_PICTURE ) {
+      rb_ary_push( ret, Picture::Ruby( self, frame ) );
+    }
+  }
+  return ret;
 }
 
 
@@ -174,6 +177,26 @@ id3lib_get_comment( VALUE self ){
   }
   return ret;
 }
+
+
+VALUE
+id3lib_each_possible_tag( VALUE self ){
+  ID3_Tag *t;
+  Data_Get_Struct( self, ID3_Tag, t );
+  for ( frame_names_hash_t::const_iterator tag=frames_hash.begin();
+	tag != frames_hash.end(); ++tag ) {
+
+    VALUE desc=Qnil;
+    ID3_Frame *frame=t->Find( tag->second );
+    if ( frame ){
+      desc=rb_str_new2( frame->GetDescription() );
+    }
+    rb_yield( rb_ary_new3( 2, rb_str_new2( tag->first.c_str() ), desc ) );
+  }
+
+  return Qtrue;
+}
+
 
 VALUE
 id3lib_debug( VALUE self ){
@@ -313,18 +336,29 @@ define_string_method( const char  *name, ID3_FrameID id ){
 extern "C"
 void
 Init_id3lib(){
+
   rb_id3lib = rb_define_class("ID3lib", rb_cObject );
 
   rb_id3pic=init_pic( rb_id3lib );
 
+  
   rb_define_singleton_method(rb_id3lib, "new", RB_METHOD(id3lib_new), 1);
+
+  // these we have to handle differently
+  frames_hash[ "comment"  ] = ID3FID_COMMENT;
+  frames_hash[ "play_counter" ] = ID3FID_PLAYCOUNTER;
+  frames_hash[ "popularity_meter" ] = ID3FID_POPULARIMETER;
+  frames_hash[ "url" ] = ID3FID_WWWUSER;
+
 
   rb_define_method(rb_id3lib, "initialize", RB_METHOD(id3lib_init), 1);
   rb_define_method(rb_id3lib, "save", RB_METHOD( id3lib_save ), 0);
 
   rb_define_method( rb_id3lib, "each_possible_tag", RB_METHOD( id3lib_each_possible_tag ), 0);
-  rb_define_method( rb_id3lib, "add_picture", RB_METHOD( id3lib_add_picture ), 1 );
+  // add a picture
+  rb_define_method( rb_id3lib, "add_picture", RB_METHOD( id3lib_add_picture ), 2 );
   rb_define_method( rb_id3lib, "each_picture", RB_METHOD( id3lib_each_picture ), 0 );
+  rb_define_method( rb_id3lib, "pictures", RB_METHOD( id3lib_pictures ), 0 );
   rb_define_method( rb_id3lib, "debug", RB_METHOD( id3lib_debug ), 0 );
   rb_define_method( rb_id3lib, "comment", RB_METHOD( id3lib_get_comment ), 0 );
   rb_define_method( rb_id3lib, "comment=", RB_METHOD( id3lib_set_comment ), 1 );
