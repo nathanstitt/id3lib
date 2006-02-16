@@ -1464,6 +1464,7 @@ class Installer
     end
     runner = Test::Unit::AutoRunner.new(true)
     runner.to_run << TESTDIR
+#    runner.to_run << TESTDIR + '/all.rb'
     runner.run
   end
 

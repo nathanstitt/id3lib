@@ -1,27 +1,21 @@
 #!/usr/bin/ruby
 
-$:.unshift File.dirname(__FILE__)+"/../"
+
+DIR=File.dirname(__FILE__)
+
+$:.unshift DIR+"/../ext/id3lib"
 
 require 'id3lib'
 
-
-
-
-__END__
-require 'test/unit'
-tag=ID3lib.new( './test.mp3' )
-
-
 class ID3LIB_TEST < Test::Unit::TestCase
 
-
     def read_id3
-        ID3lib.new( './test.mp3' )
+        ID3lib.new( DIR+'/test.mp3' )
     end
 
     def test_attrs
         id3=read_id3
-        id3.each_possible_tag do | tag |
+        id3.each_possible_tag do | tag,desc |
             if id3.method( tag ).call.is_a?( Numeric )
                 assert( id3.method( tag+'=' ).call( 42 ) )
             else
@@ -31,7 +25,7 @@ class ID3LIB_TEST < Test::Unit::TestCase
         id3.save
 
         id3_2=read_id3
-        id3_2.each_possible_tag do | tag |
+        id3_2.each_possible_tag do | tag,desc |
             if id3_2.method( tag ).call.is_a?( Numeric )
                 assert_equal( 42, id3_2.method( tag ).call )
             else
@@ -46,7 +40,6 @@ class ID3LIB_TEST < Test::Unit::TestCase
             assert_kind_of( String, pic.description )
             pic.delete
         end
-
         id3.save
 
         id3=read_id3
@@ -54,15 +47,15 @@ class ID3LIB_TEST < Test::Unit::TestCase
 
         id3=read_id3
         data=''
-        File.open('test.mp3' ){ | f | data=f.read }
-        pic=id3.add_picture( data )
+        File.open( DIR+'/cover.jpg' ){ | f | data=f.read }
+        pic=id3.add_picture( data, ID3lib::Picture::FRONT_COVER )
         pic.description='Test Picture'
         id3.save
 
-       
         id3=read_id3
         assert_equal( 1, id3.pictures.size )
         assert_equal( 'Test Picture', id3.pictures.first.description )
+        assert_equal( data, id3.pictures.first.data )
     end
 end
 
