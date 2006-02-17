@@ -3,7 +3,7 @@
 (defun my-save-and-compile ()
   (interactive "")
   (save-buffer 0)
-  (compile "cd ~/code/ruby/id3lib && make && cd test && ruby test.rb"))
+  (compile "cd ~/code/ruby/id3lib && make && cd test && ruby test_load.rb"))
 
 
 (defun my-save-and-compile ()
@@ -15,6 +15,7 @@
   (interactive "")
   (save-buffer 0)
   (compile "cd ~/code/ruby/id3lib && ruby setup.rb test"))
+
 
 ;; && ruby extconf.rb && make clean
 

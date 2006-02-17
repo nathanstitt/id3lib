@@ -1,6 +1,5 @@
 #!/usr/bin/ruby
 
-
 DIR=File.dirname(__FILE__)
 
 $:.unshift DIR+"/../ext/id3lib"
