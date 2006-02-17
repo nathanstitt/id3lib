@@ -11,18 +11,18 @@ static frame_names_hash_t frames_hash;
 
 static VALUE rb_id3lib;
 static VALUE rb_id3pic;
+static VALUE rb_id3lib_load;
 
 static void delete_tag(ID3_Tag *ptr){ delete ptr; }
 
-static const ID rb_method_to_s = rb_intern("to_s");
-static const ID rb_method_new = rb_intern("new");
-static const ID rb_method_to_i = rb_intern("to_i");
+static const ID rb_method_from_tag = rb_intern("from_tag");
 
 
 
 
 void
 dump_frame( ID3_Frame *frame ){
+  cout << __LINE__ << endl;
   cout << frame->GetTextID() << "   " << frame->GetDescription() << endl;
   ID3_Frame::Iterator* fiter = frame->CreateIterator();
   ID3_Field* field = NULL;
@@ -30,7 +30,7 @@ dump_frame( ID3_Frame *frame ){
   while ( NULL != ( field = fiter->GetNext()) ) {
     cout << "       " << ++i;
     uint32_t type=field->GetType();
-    cout << " Type :" << type 
+    cout << " Type :" << setw(4) << type 
 	 << " ID: "   << setw(4) << field->GetID()
 	 << " Size: " << setw(4) << field->Size()
 	 << "  -  ";
@@ -97,7 +97,7 @@ id3lib_add_picture( VALUE self, VALUE data, VALUE type ){
   char *dat=rb_str2cstr( data, &len );
   ID3_Frame *frame = new ID3_Frame( ID3FID_PICTURE );
   frame->GetField( ID3FN_DATA )->Set( (const uchar*)dat, len );
-  frame->GetField( ID3FN_PICTURETYPE )->Set( INT2FIX( type ) );
+  frame->GetField( ID3FN_PICTURETYPE )->Set( NUM2UINT( type ) );
   tag->AttachFrame( frame );
   return Picture::Ruby( self, frame );
 }
@@ -132,6 +132,21 @@ id3lib_pictures( VALUE self ){
   return ret;
 }
 
+VALUE
+sl_iter(VALUE ary, std::string *data ){
+  long int len;
+  size_t time=NUM2INT( rb_ary_entry( ary, 0 ) ); 
+  char * str=rb_str2cstr( rb_ary_entry( ary, 1 ), &len );
+
+
+  data->append( str, len );
+  data->append( "\0", 1 );
+  data->append( (const char*)&time, 2 );
+
+  cout << *data << "  -|-  " << str << endl;
+
+  return Qnil;
+}
 
 
 
@@ -285,6 +300,15 @@ id3lib_set_url( VALUE self, VALUE val ){
   return id3lib_set_str_tag( self, val, ID3FID_WWWUSER, ID3FN_URL );
 }
 
+static VALUE
+id3lib_set_synced_lyrics( VALUE self , VALUE lyrics ){
+  return id3lib_set_str_tag( self, lyrics, ID3FID_SYNCEDLYRICS, ID3FN_DESCRIPTION );
+}
+
+static VALUE
+id3lib_get_synced_lyrics( VALUE self ){
+  return  id3lib_get_str_tag( self, ID3FID_SYNCEDLYRICS, ID3FN_DESCRIPTION );
+}
 
 static VALUE
 id3lib_set_popularity_meter( VALUE self, VALUE value ){
@@ -306,6 +330,11 @@ id3lib_get_play_counter( VALUE self ){
   return id3lib_get_int_tag( self, ID3FID_PLAYCOUNTER, ID3FN_COUNTER );
 }
 
+
+static VALUE
+id3lib_download_metadata( VALUE self ){
+  return rb_funcall( rb_id3lib_load, rb_method_from_tag, 1, self );
+}
 
 VALUE
 str_set( VALUE self, VALUE val ){
@@ -336,11 +365,13 @@ define_string_method( const char  *name, ID3_FrameID id ){
 extern "C"
 void
 Init_id3lib(){
+  rb_require("id3lib/load");
+
+  rb_id3lib_load=rb_path2class("ID3lib::Load");
 
   rb_id3lib = rb_define_class("ID3lib", rb_cObject );
 
   rb_id3pic=init_pic( rb_id3lib );
-
   
   rb_define_singleton_method(rb_id3lib, "new", RB_METHOD(id3lib_new), 1);
 
@@ -349,12 +380,15 @@ Init_id3lib(){
   frames_hash[ "play_counter" ] = ID3FID_PLAYCOUNTER;
   frames_hash[ "popularity_meter" ] = ID3FID_POPULARIMETER;
   frames_hash[ "url" ] = ID3FID_WWWUSER;
-
+  frames_hash[ "synced_lyrics" ] = ID3FID_SYNCEDLYRICS;
 
   rb_define_method(rb_id3lib, "initialize", RB_METHOD(id3lib_init), 1);
   rb_define_method(rb_id3lib, "save", RB_METHOD( id3lib_save ), 0);
 
   rb_define_method( rb_id3lib, "each_possible_tag", RB_METHOD( id3lib_each_possible_tag ), 0);
+
+  rb_define_method( rb_id3lib, "download_metadata", RB_METHOD( id3lib_download_metadata ), 0);
+
   // add a picture
   rb_define_method( rb_id3lib, "add_picture", RB_METHOD( id3lib_add_picture ), 2 );
   rb_define_method( rb_id3lib, "each_picture", RB_METHOD( id3lib_each_picture ), 0 );
@@ -362,6 +396,9 @@ Init_id3lib(){
   rb_define_method( rb_id3lib, "debug", RB_METHOD( id3lib_debug ), 0 );
   rb_define_method( rb_id3lib, "comment", RB_METHOD( id3lib_get_comment ), 0 );
   rb_define_method( rb_id3lib, "comment=", RB_METHOD( id3lib_set_comment ), 1 );
+
+  rb_define_method( rb_id3lib, "synced_lyrics", RB_METHOD( id3lib_get_synced_lyrics ), 0 );
+  rb_define_method( rb_id3lib, "synced_lyrics=", RB_METHOD( id3lib_set_synced_lyrics ), 1 );
 
   rb_define_method( rb_id3lib, "play_counter",  RB_METHOD( id3lib_get_play_counter), 0 );
   rb_define_method( rb_id3lib, "play_counter=", RB_METHOD( id3lib_set_play_counter), 1 );

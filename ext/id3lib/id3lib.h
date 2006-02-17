@@ -25,4 +25,5 @@ class Picture {
 };
 
 
+
 #endif // _ID3LIB_H_

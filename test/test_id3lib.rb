@@ -3,7 +3,9 @@
 DIR=File.dirname(__FILE__)
 
 $:.unshift DIR+"/../ext/id3lib"
+$:.unshift DIR+"/../lib"
 
+require 'test/unit'
 require 'id3lib'
 
 class ID3LIB_TEST < Test::Unit::TestCase
@@ -33,6 +35,18 @@ class ID3LIB_TEST < Test::Unit::TestCase
         end
      end
 
+    def test_download
+        tag=read_id3
+        tag.each_picture do | pic | 
+            pic.delete
+        end
+        tag.title='Holiday'
+        tag.album='American Idiot'
+        tag.artist='Green Day'
+        tag.download_metadata
+        assert( ! tag.pictures.empty? )
+    end
+
     def test_pictures
         id3=read_id3
         id3.each_picture do | pic | 
@@ -55,6 +69,7 @@ class ID3LIB_TEST < Test::Unit::TestCase
         assert_equal( 1, id3.pictures.size )
         assert_equal( 'Test Picture', id3.pictures.first.description )
         assert_equal( data, id3.pictures.first.data )
+        assert_equal( "FRONT_COVER", id3.pictures.first.depicts )
     end
 end
 
