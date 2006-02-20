@@ -30,7 +30,17 @@ File.open( 'id3lib.rb','w' ) do | cls |
         def delete
         end
     end
-    # Arguably the most overlooked method in the library.  save must be called
+
+    # using the musicextras library (  http://musicextras.divineinvasion.net/ )
+    # attempt to download and fill in the cover picture, lyrics, and synced lyrics fields   
+    def download_metatdata
+    end
+
+    # returns true if the tag does not have a picture, lyrics or synced lyrics fields filled in
+    def lacking_metadata?
+    end
+
+    # Arguably the most overlooked method in the library.  save MUST BE CALLED
     # so that changes are written to the tag.
     def save
     end

@@ -3,8 +3,6 @@
 
 static VALUE rb_id3pic;
 
-typedef gnu::hash_map<uint32_t,std::string> types_hash_t;
-static types_hash_t types_hash;
 
 static const ID rb_method_to_s = rb_intern("to_s");
 
@@ -56,19 +54,14 @@ VALUE
 get_depicts( VALUE self ){
   Picture *pic;
   Data_Get_Struct( self, Picture, pic );
-  types_hash_t::const_iterator type=types_hash.find( pic->frame->GetField( ID3FN_PICTURETYPE )->Get() );
-  if ( type != types_hash.end() ) {
-    return rb_str_new2( type->second.c_str() );
-  } else {
-    return rb_str_new2( "UNKOWN" );
-  }
+  return INT2FIX( pic->frame->GetField( ID3FN_PICTURETYPE )->Get()  );
 }
 
 VALUE
 set_depicts( VALUE self, VALUE id ){
   Picture *pic;
   Data_Get_Struct( self, Picture, pic );
-  pic->frame->GetField( ID3FN_PICTURETYPE )->Set( INT2FIX( id ) );
+  pic->frame->GetField( ID3FN_PICTURETYPE )->Set( NUM2INT( id ) );
   return id;
 }
 
@@ -93,7 +86,6 @@ set_data( VALUE self, VALUE data ){
 
 void
 make_const( const char *name, uint32_t id ){
-  types_hash[ id ] = name;
   rb_define_const( rb_id3pic, name, INT2NUM( id ) );
 }
 

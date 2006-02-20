@@ -11,7 +11,7 @@ require 'id3lib'
 class ID3LIB_TEST < Test::Unit::TestCase
 
     def read_id3
-        ID3lib.new( DIR+'/test.mp3' )
+        ID3lib.new( "/mnt/snoopy/music/Green Day/American Idiot/03 - Holiday.mp3" ) #DIR+'/test.mp3' )
     end
 
     def test_attrs
@@ -40,12 +40,21 @@ class ID3LIB_TEST < Test::Unit::TestCase
         tag.each_picture do | pic | 
             pic.delete
         end
+        assert( tag.lacking_metadata? )
+
         tag.title='Holiday'
         tag.album='American Idiot'
         tag.artist='Green Day'
         tag.download_metadata
         assert( ! tag.pictures.empty? )
     end
+
+    def test_length
+        id3=read_id3
+        puts id3.bitrate
+        
+    end
+
 
     def test_pictures
         id3=read_id3
@@ -58,6 +67,7 @@ class ID3LIB_TEST < Test::Unit::TestCase
         id3=read_id3
         assert( id3.pictures.empty? )
 
+
         id3=read_id3
         data=''
         File.open( DIR+'/cover.jpg' ){ | f | data=f.read }
@@ -69,7 +79,7 @@ class ID3LIB_TEST < Test::Unit::TestCase
         assert_equal( 1, id3.pictures.size )
         assert_equal( 'Test Picture', id3.pictures.first.description )
         assert_equal( data, id3.pictures.first.data )
-        assert_equal( "FRONT_COVER", id3.pictures.first.depicts )
+        assert_equal( ID3lib::Picture::FRONT_COVER, id3.pictures.first.depicts )
     end
 end
 

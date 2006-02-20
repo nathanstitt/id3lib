@@ -69,7 +69,7 @@ id3lib_init( VALUE self, VALUE file ) {
   ID3_Tag *tag;
   Data_Get_Struct( self, ID3_Tag, tag );
   tag->Link( StringValuePtr(file) );
-  if ( ! tag->GetFileSize() ) {
+  if ( ( ! tag->GetFileSize() ) && ( ! tag->NumFrames() ) ) {
     rb_raise ( rb_eArgError, "File not opened correctly");
   }
   return self;
@@ -330,6 +330,38 @@ id3lib_get_play_counter( VALUE self ){
   return id3lib_get_int_tag( self, ID3FID_PLAYCOUNTER, ID3FN_COUNTER );
 }
 
+static VALUE
+id3lib_bitrate( VALUE self ){
+  ID3_Tag *tag;
+  Data_Get_Struct( self, ID3_Tag, tag );
+  const Mp3_Headerinfo *header = tag->GetMp3HeaderInfo();
+  if ( header )
+    return  INT2FIX( header->bitrate );
+  else
+    return  INT2FIX( 0 );
+}
+
+static VALUE
+id3lib_length( VALUE self ){
+  ID3_Tag *tag;
+  Data_Get_Struct( self, ID3_Tag, tag );
+  const Mp3_Headerinfo *header = tag->GetMp3HeaderInfo();
+  if ( header )
+    return  INT2FIX( header->time );
+  else
+    return  INT2FIX( 0 );
+}
+
+static VALUE
+id3lib_lacking_metadata( VALUE self ){
+  ID3_Tag *tag;
+  Data_Get_Struct( self, ID3_Tag, tag );
+  if ( tag->Find( ID3FID_SYNCEDLYRICS ) && tag->Find( ID3FID_UNSYNCEDLYRICS ) && tag->Find( ID3FID_PICTURE ) )
+    return Qtrue;
+  else
+    return Qfalse;
+}
+
 
 static VALUE
 id3lib_download_metadata( VALUE self ){
@@ -387,7 +419,12 @@ Init_id3lib(){
 
   rb_define_method( rb_id3lib, "each_possible_tag", RB_METHOD( id3lib_each_possible_tag ), 0);
 
-  rb_define_method( rb_id3lib, "download_metadata", RB_METHOD( id3lib_download_metadata ), 0);
+  rb_define_method( rb_id3lib, "lacking_metadata?", RB_METHOD( id3lib_lacking_metadata ), 0 );
+  rb_define_method( rb_id3lib, "download_metadata", RB_METHOD( id3lib_download_metadata ), 0 );
+
+  rb_define_method( rb_id3lib, "bitrate", RB_METHOD( id3lib_bitrate ) , 0 );
+
+  rb_define_method( rb_id3lib, "length", RB_METHOD( id3lib_length ) , 0 );
 
   // add a picture
   rb_define_method( rb_id3lib, "add_picture", RB_METHOD( id3lib_add_picture ), 2 );

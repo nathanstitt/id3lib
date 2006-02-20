@@ -10,8 +10,11 @@ end
 
 class ID3lib
 
+
+
 class Load 
 
+    
     def Load.from_tag( tag )
         return tag unless HAVE_MUSIC_EXTRAS
 
