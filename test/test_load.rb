@@ -14,7 +14,9 @@ tag.save
 
 #ID3lib::Load.from_file( DIR+'/test.mp3' )
 
-ID3lib::Load.from_file( "/mnt/snoopy/music/Green Day/American Idiot/03 - Holiday.mp3" )
+tag = ID3lib::Load.from_file( "/mnt/snoopy/music/Tom/Pink Floyd - Echoes Disk 1/05 - Track 5 - .mp3" )
+
+puts tag.pictures.size
 
 __END__
 

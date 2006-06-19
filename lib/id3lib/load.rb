@@ -1,8 +1,19 @@
 
 begin
-    require 'musicextras/song'
+    require 'musicextras/mconfig'
+    $LOAD_PATH.unshift(MusicExtras::MConfig.instance['basedir'])
     require 'musicextras/musicsites/_load_sites'
-    MusicExtras::MusicSite::activate_plugins
+    require 'musicextras/musicsite'
+    require 'musicextras/album'
+    require 'musicextras/artist'
+    require 'musicextras/song'
+    require 'musicextras/cache'
+    require 'musicextras/guicontrol'
+    require 'musicextras/debuggable'
+    require 'base64'
+    require 'ostruct'
+    require 'fileutils'
+    MusicExtras::MusicSite::activate_plugins( MusicExtras::MusicSite::plugins )    
     HAVE_MUSIC_EXTRAS=true
 rescue LoadError
     HAVE_MUSIC_EXTRAS=false
@@ -14,7 +25,6 @@ class ID3lib
 
 class Load 
 
-    
     def Load.from_tag( tag )
         return tag unless HAVE_MUSIC_EXTRAS
 
@@ -30,16 +40,11 @@ class Load
             else
                 song=MusicExtras::Song.new( tag.title, tag.artist )
             end
-        else
-            song=MusicExtras::Song.new( tag.title, tag.artist )
         end
-        lr=MusicExtras::Lrcdb.new
-        synced=lr.synced_lyrics( song )
-        if synced
-            tag.synced_lyrics=synced
-        elsif song.lyrics
-            tag.unsynced_lyrics=song.lyrics
-        end
+        song=MusicExtras::Song.new( tag.title, tag.artist )
+        synced=song.synced_lyrics( song )
+        tag.synced_lyrics=synced if synced
+        tag.unsynced_lyrics=song.lyrics if song.lyrics
         return tag
     end
 
