@@ -42,14 +42,22 @@ class Load
             end
         end
         song=MusicExtras::Song.new( tag.title, tag.artist )
-        synced=song.synced_lyrics( song )
+        synced=song.synced_lyrics
+        artist=MusicExtras::Artist.new( tag.artist )
+        img = artist.image
+        if img
+            tag.each_picture do | pic |
+                pic.delete if pic.depicts == ID3lib::Picture::ARTIST
+            end
+            tag.add_picture( img, ID3lib::Picture::FRONT_COVER )
+        end
         tag.synced_lyrics=synced if synced
         tag.unsynced_lyrics=song.lyrics if song.lyrics
         return tag
     end
 
     def Load.from_file( path )
-        id3=ID3lib.new( path )
+        id3=::ID3lib.new( path )
         return Load.from_tag( id3 )
     end
 

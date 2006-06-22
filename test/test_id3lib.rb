@@ -11,7 +11,7 @@ require 'id3lib'
 class ID3LIB_TEST < Test::Unit::TestCase
 
     def read_id3
-        ID3lib.new( "/mnt/snoopy/music/Green Day/American Idiot/03 - Holiday.mp3" ) #DIR+'/test.mp3' )
+        ID3lib.new( "#{DIR}/test.mp3" )
     end
 
     def test_attrs
@@ -37,10 +37,11 @@ class ID3LIB_TEST < Test::Unit::TestCase
 
     def test_download
         tag=read_id3
+        
         tag.each_picture do | pic | 
             pic.delete
         end
-        assert( tag.lacking_metadata? )
+        assert( tag.pictures.empty? )
 
         tag.title='Holiday'
         tag.album='American Idiot'

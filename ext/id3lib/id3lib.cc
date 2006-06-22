@@ -365,7 +365,7 @@ id3lib_lacking_metadata( VALUE self ){
 
 static VALUE
 id3lib_download_metadata( VALUE self ){
-  return rb_funcall( rb_id3lib_load, rb_method_from_tag, 1, self );
+	return rb_funcall( rb_id3lib_load, rb_method_from_tag, 1, self );
 }
 
 VALUE
