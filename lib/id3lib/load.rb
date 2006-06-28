@@ -25,34 +25,37 @@ class ID3lib
 
 class Load 
 
+
     def Load.from_tag( tag )
         return tag unless HAVE_MUSIC_EXTRAS
 
-        if tag.album && ! tag.album.empty?
+        unless tag.album.empty? || tag.has_picture?( ID3lib::Picture::FRONT_COVER )
             album=MusicExtras::Album.new( tag.album,  tag.artist  )
             cover=album.cover
             if cover
-                tag.each_picture do | pic |
-                    pic.delete if pic.depicts == ID3lib::Picture::FRONT_COVER
-                end
                 tag.add_picture( cover, ID3lib::Picture::FRONT_COVER )
-                song=MusicExtras::Song.with_album( tag.title, album )
-            else
+            end
+        end
+        unless tag.artist.empty?
+            unless tag.title.empty?
                 song=MusicExtras::Song.new( tag.title, tag.artist )
+                if tag.synced_lyrics.empty?
+                    lyr=song.synced_lyrics
+                    tag.synced_lyrics=lyr if lyr
+                end
+                if tag.lyrics.empty?
+                    lyr=song.lyrics
+                    tag.lyrics=lyr if lyr
+                end
+            end
+            artist=MusicExtras::Artist.new( tag.artist )
+            unless tag.has_picture? ID3lib::Picture::ARTIST
+                image=artist.image  
+                if image
+                    tag.add_picture( image, ID3lib::Picture::FRONT_COVER )                    
+                end
             end
         end
-        song=MusicExtras::Song.new( tag.title, tag.artist )
-        synced=song.synced_lyrics
-        artist=MusicExtras::Artist.new( tag.artist )
-        img = artist.image
-        if img
-            tag.each_picture do | pic |
-                pic.delete if pic.depicts == ID3lib::Picture::ARTIST
-            end
-            tag.add_picture( img, ID3lib::Picture::FRONT_COVER )
-        end
-        tag.synced_lyrics=synced if synced
-        tag.unsynced_lyrics=song.lyrics if song.lyrics
         return tag
     end
 

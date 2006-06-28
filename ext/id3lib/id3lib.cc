@@ -253,10 +253,12 @@ static VALUE
 id3lib_get_str_tag( VALUE self, ID3_FrameID frame_id,ID3_FieldID field_id ){
   ID3_Tag *tag;
   Data_Get_Struct( self, ID3_Tag, tag );
-  VALUE ret=Qnil;
+  VALUE ret=0;
   ID3_Frame* frame = tag->Find( frame_id );
   if ( frame) {
-    ret=rb_str_new2( frame->GetField( field_id )->GetRawText() );
+	  ret=rb_str_new2( frame->GetField( field_id )->GetRawText() );
+  } else {
+	  ret=rb_str_new2( "" );
   }
   return ret;
 }
@@ -447,8 +449,8 @@ Init_id3lib(){
   rb_define_method( rb_id3lib, "length", RB_METHOD( id3lib_length ) , 0 );
 
   // add a picture
-  rb_define_method( rb_id3lib, "has_picture?", RB_METHOD( id3lib_has_picture ), 2 );
-  rb_define_method( rb_id3lib, "get_picture", RB_METHOD( id3lib_get_picture ), 2 );
+  rb_define_method( rb_id3lib, "has_picture?", RB_METHOD( id3lib_has_picture ), 1 );
+  rb_define_method( rb_id3lib, "get_picture", RB_METHOD( id3lib_get_picture ), 1 );
   rb_define_method( rb_id3lib, "add_picture", RB_METHOD( id3lib_add_picture ), 2 );
   rb_define_method( rb_id3lib, "each_picture", RB_METHOD( id3lib_each_picture ), 0 );
   rb_define_method( rb_id3lib, "pictures", RB_METHOD( id3lib_pictures ), 0 );
@@ -510,6 +512,6 @@ Init_id3lib(){
   define_string_method( "user_text",ID3FID_USERTEXT );
   define_string_method( "year",ID3FID_YEAR );
   define_string_method( "terms_of_use",ID3FID_TERMSOFUSE );
-  define_string_method( "unsynced_lyrics", ID3FID_UNSYNCEDLYRICS );
+  define_string_method( "lyrics", ID3FID_UNSYNCEDLYRICS );
 
 }
