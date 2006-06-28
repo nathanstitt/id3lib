@@ -357,9 +357,9 @@ id3lib_lacking_metadata( VALUE self ){
   ID3_Tag *tag;
   Data_Get_Struct( self, ID3_Tag, tag );
   if ( tag->Find( ID3FID_SYNCEDLYRICS ) && tag->Find( ID3FID_UNSYNCEDLYRICS ) && tag->Find( ID3FID_PICTURE ) )
-    return Qtrue;
-  else
     return Qfalse;
+  else
+    return Qtrue;
 }
 
 
