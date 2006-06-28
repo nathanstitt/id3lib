@@ -102,6 +102,26 @@ id3lib_add_picture( VALUE self, VALUE data, VALUE type ){
   return Picture::Ruby( self, frame );
 }
 
+VALUE
+id3lib_get_picture( VALUE self, VALUE type ){
+  ID3_Tag *tag;
+  Data_Get_Struct( self, ID3_Tag, tag );
+  std::auto_ptr<ID3_Tag::Iterator> iter( tag->CreateIterator() );
+  ID3_Frame* frame = NULL;
+  while (NULL != ( frame = iter->GetNext())){
+	  if ( ( frame->GetID() == ID3FID_PICTURE ) && frame->GetField( ID3FN_PICTURETYPE )->Get() == INT2FIX( type ) ){
+		return Picture::Ruby( self, frame );
+	  }
+  }
+  return Qnil;
+}
+
+
+VALUE
+id3lib_has_picture( VALUE self, VALUE type ){
+	return id3lib_get_picture( self, type );
+}
+
 
 static VALUE
 id3lib_each_picture( VALUE self ){
@@ -427,6 +447,8 @@ Init_id3lib(){
   rb_define_method( rb_id3lib, "length", RB_METHOD( id3lib_length ) , 0 );
 
   // add a picture
+  rb_define_method( rb_id3lib, "has_picture?", RB_METHOD( id3lib_has_picture ), 2 );
+  rb_define_method( rb_id3lib, "get_picture", RB_METHOD( id3lib_get_picture ), 2 );
   rb_define_method( rb_id3lib, "add_picture", RB_METHOD( id3lib_add_picture ), 2 );
   rb_define_method( rb_id3lib, "each_picture", RB_METHOD( id3lib_each_picture ), 0 );
   rb_define_method( rb_id3lib, "pictures", RB_METHOD( id3lib_pictures ), 0 );
